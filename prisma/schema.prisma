@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    Int    @id @default(autoincrement())
+  email String @unique
+
+  orders Order[]
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id       Int     @id @default(autoincrement())
+  price    Int
+  name     String
+  verified Boolean @default(false)
+
+  orderItems OrderItem[]
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id     Int @id @default(autoincrement())
+  userId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+  user       User        @relation(fields: [userId], references: [id])
+}
+
+model OrderItem {
+  id        Int @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([orderId, productId])
+}
+
+enum AuditOperation {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model ProductAuditTrail {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  modelId   Int
+  model     String
+  hash      String   @unique
+  timestamp DateTime @default(now())
+
+  operation AuditOperation
+
+  data Json?
+}
+
+model AuditTrail {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  modelId   Int
+  model     String
+  hash      String   @unique
+  timestamp DateTime @default(now())
+
+  operation AuditOperation
+
+  data Json?
+}
